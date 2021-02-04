@@ -1,0 +1,24 @@
+{
+  "name": "wordbazaar-module",
+  "version": "1.0.0",
+  "description": "wordbazaar-module",
+  "main": "WordBazaar.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AtanasKrondev/wordbazaar-module.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AtanasKrondev/wordbazaar-module/issues"
+  },
+  "homepage": "https://github.com/AtanasKrondev/wordbazaar-module#readme",
+  "dependencies": {
+    "bignumber.js": "^9.0.1",
+    "sophia-bonding-curve": "github:aeternity/BondingCurve#1.0.0-alpha",
+    "wordbazaar-contracts": "github:aeternity/wordbazaar-contracts#v0.0.1-alpha1"
+  }
+}
