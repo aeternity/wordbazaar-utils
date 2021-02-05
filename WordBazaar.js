@@ -4,12 +4,15 @@ import TOKEN_SALE_CONTRACT from 'wordbazaar-contracts/TokenSale.aes';
 import WORD_REGISTRY_CONTRACT from 'wordbazaar-contracts/WordRegistry.aes';
 import BONDING_CURVE from 'sophia-bonding-curve/BondCurveLinear.aes';
 import BigNumber from 'bignumber.js';
+import { get } from 'lodash';
 
 const shiftDecimalPlaces = (amount, decimals) => new BigNumber(amount).shiftedBy(decimals);
-
+const sdk = (rootState, path) => get(rootState, path);
+ 
 export default class WordBazaar {
-  constructor(wordRegistryAddress) {
-    this.wordRegistryAddress = wordRegistryAddress;
+  constructor(wordRegistryAddress, sdkPath) {
+    wordRegistryAddress = wordRegistryAddress;
+    sdkPath = sdkPath;
     this.state = {
       tokenVotingContracts: {},
       tokenSaleContracts: {},
@@ -30,12 +33,12 @@ export default class WordBazaar {
       async initWordRegistryContractIfNeeded({
         commit,
         state: { wordRegistryContract },
-        rootState: { aeternity },
+        rootState,
       }) {
         if (!wordRegistryContract) {
-          const contract = await aeternity.sdk
+          const contract = await sdk(rootState, sdkPath)
             .getContractInstance(WORD_REGISTRY_CONTRACT,
-              { contractAddress: this.wordRegistryAddress });
+              { contractAddress: wordRegistryAddress });
           commit('setWordRegistryContract', contract);
           return contract;
         }
@@ -43,11 +46,11 @@ export default class WordBazaar {
         return wordRegistryContract;
       },
       async initTokenVotingContractIfNeeded(
-        { commit, state: { tokenVotingContracts }, rootState: { aeternity } },
+        { commit, state: { tokenVotingContracts }, rootState },
         contractAddress,
       ) {
         if (!tokenVotingContracts[contractAddress]) {
-          const contract = await aeternity.sdk
+          const contract = await sdk(rootState, sdkPath)
             .getContractInstance(TOKEN_VOTING_CONTRACT, { contractAddress });
           commit('setTokenVotingContract', contractAddress, contract);
           return contract;
@@ -56,11 +59,11 @@ export default class WordBazaar {
         return tokenVotingContracts[contractAddress];
       },
       async initTokenSaleContractIfNeeded(
-        { commit, state: { tokenSaleContracts }, rootState: { aeternity } },
+        { commit, state: { tokenSaleContracts }, rootState },
         contractAddress,
       ) {
         if (!tokenSaleContracts[contractAddress]) {
-          const contract = await aeternity.sdk
+          const contract = await sdk(rootState, sdkPath)
             .getContractInstance(TOKEN_SALE_CONTRACT, { contractAddress });
           commit('setTokenSaleContract', contractAddress, contract);
           return contract;
@@ -68,18 +71,19 @@ export default class WordBazaar {
 
         return tokenSaleContracts[contractAddress];
       },
-      async deployBondingCurve({ rootState: { aeternity } }, decimals) {
+      async deployBondingCurve({ rootState }, decimals) {
         const BONDING_CURVE_DECIMALS = BONDING_CURVE.replace(
           'function alpha() : Frac.frac = Frac.make_frac(1, 1)',
           `function alpha() : Frac.frac = Frac.make_frac(1, ${shiftDecimalPlaces(1, decimals)})`,
         );
-        const contract = await aeternity.sdk.getContractInstance(BONDING_CURVE_DECIMALS);
+        const contract = await sdk(rootState, sdkPath)
+          .getContractInstance(BONDING_CURVE_DECIMALS);
         await contract.methods.init();
 
         return contract.deployInfo.address;
       },
       async deployTokenSaleContract(
-        { commit, rootState: { aeternity } },
+        { commit, rootState },
         {
           decimals,
           timeout,
@@ -92,13 +96,14 @@ export default class WordBazaar {
           `let decimals = ${shiftDecimalPlaces(1, decimals)}`,
         );
 
-        const contract = await aeternity.sdk.getContractInstance(TOKEN_SALE_CONTRACT_DECIMALS);
+        const contract = await sdk(rootState, sdkPath)
+          .getContractInstance(TOKEN_SALE_CONTRACT_DECIMALS);
         await contract.methods.init(timeout, bondingCurveAddress, description);
         commit('setTokenSaleContract', contract.deployInfo.address, contract);
         return contract.deployInfo.address;
       },
       async deployFungibleTokenContract(
-        { commit, rootState: { aeternity } },
+        { commit, rootState },
         {
           name,
           decimals,
@@ -106,20 +111,22 @@ export default class WordBazaar {
           tokenSaleAddress,
         },
       ) {
-        const contract = await aeternity.sdk.getContractInstance(FUNGIBLE_TOKEN_CONTRACT);
+        const contract = await sdk(rootState, sdkPath)
+          .getContractInstance(FUNGIBLE_TOKEN_CONTRACT);
         await contract.methods.init(name, decimals, symbol, tokenSaleAddress);
         commit('setFungibleTokenContract', contract.deployInfo.address, contract);
         return contract.deployInfo.address;
       },
       async deployTokenVotingContract(
-        { commit, rootState: { aeternity } },
+        { commit, rootState },
         {
           metadata,
           closeHeight,
           token,
         },
       ) {
-        const contract = await aeternity.sdk.getContractInstance(TOKEN_VOTING_CONTRACT);
+        const contract = await sdk(rootState, sdkPath)
+          .getContractInstance(TOKEN_VOTING_CONTRACT);
         await contract.methods.init(metadata, closeHeight, token);
         commit('setTokenVotingContract', contract.deployInfo.address, contract);
         return contract.deployInfo.address;

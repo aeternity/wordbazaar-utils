@@ -18,6 +18,7 @@
   "homepage": "https://github.com/AtanasKrondev/wordbazaar-module#readme",
   "dependencies": {
     "bignumber.js": "^9.0.1",
+    "lodash": "^4.17.20",
     "sophia-bonding-curve": "github:aeternity/BondingCurve#1.0.0-alpha",
     "wordbazaar-contracts": "github:aeternity/wordbazaar-contracts#v0.0.1-alpha1"
   }
