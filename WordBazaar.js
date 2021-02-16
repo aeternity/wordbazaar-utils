@@ -6,6 +6,7 @@ import BONDING_CURVE from 'sophia-bonding-curve/BondCurveLinear.aes';
 import BigNumber from 'bignumber.js';
 import { get } from 'lodash';
 
+const WORD_REGISTRY_ADDRESS = 'ct_zPka9jyqrRdRQX3XuZEMsdzydcRvULVWFqRpqgZmTb1EszfQT';
 const shiftDecimalPlaces = (amount, decimals) => new BigNumber(amount).shiftedBy(decimals);
 const sdk = (rootState, path) => get(rootState, path);
  
@@ -16,6 +17,7 @@ export default class WordBazaar {
     this.state = {
       tokenVotingContracts: {},
       tokenSaleContracts: {},
+      fungibleTokenContracts: {},
     };
 
     this.mutations = {
@@ -27,6 +29,9 @@ export default class WordBazaar {
       },
       setWordRegistryContract(state, instance) {
         state.wordRegistryContract = instance;
+      },
+      setFungibleTokenContract(state, contractAddress, instance) {
+        state.fungibleTokenContracts[contractAddress] = instance;
       },
     };
     this.actions = {
@@ -117,7 +122,7 @@ export default class WordBazaar {
       ) {
         const contract = await sdk(rootState, sdkPath)
           .getContractInstance(FUNGIBLE_TOKEN_CONTRACT);
-        await contract.methods.init(name, decimals, symbol, tokenSaleAddress);
+        await contract.methods.init(name, decimals, symbol, tokenSaleAddress, WORD_REGISTRY_ADDRESS);
         commit('setFungibleTokenContract', contract.deployInfo.address, contract);
         return contract.deployInfo.address;
       },
